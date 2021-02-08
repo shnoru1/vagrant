@@ -1,0 +1,59 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# frozen_string_literal: true
+
+class Hash
+  unless Hash.method_defined?(:slice)
+    def slice(*keep_keys)
+      h = {}
+      keep_keys.each { |key| h[key] = fetch(key) if has_key?(key) }
+      h
+    end
+  end
+  unless Hash.method_defined?(:except)
+    def except(*less_keys)
+      slice(*keys - less_keys)
+    end
+  end
+end
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "gusztavvargadr/visual-studio-community-windows-10"
+  config.vm.communicator = 'winrm'
+  #config.linked_clone = true if Gem::Version.new(Vagrant::VERSION) >= Gem::Version.new('1.8.0')
+  config.vbguest.auto_update = true
+  #config.vm.synced_folder "share/", "/share"
+  config.vm.provider 'virtualbox' do |vb, _override|
+    vb.linked_clone = true
+    vb.gui = false
+    vb.customize ['modifyvm', :id, '--memory', 2048]
+    vb.customize ['modifyvm', :id, '--cpus', 2]
+    vb.customize ['modifyvm', :id, '--vram', 64]
+    # Enables and disables the use of hardware virtualization extensions,
+    # such as Intel VT-x or AMD-V, in the processor of your host system.
+    vb.customize ['modifyvm', :id, '--hwvirtex', 'on']
+    # Specifies which paravirtualization interface to provide to the guest operating system.
+    # Specifying none explicitly turns off exposing any paravirtualization interface.
+    # The option default selects an appropriate interface when starting the VM, depending on the guest OS type.
+    # This is the default option chosen when creating new VMs. The legacy option is used for VMs which
+    # were created with older Oracle VM VirtualBox versions and will pick a paravirtualization interface
+    # when starting the VM with Oracle VM VirtualBox 5.0 and newer.
+    # The minimal provider is mandatory for Mac OS X guests.
+    # kvm and hyperv are recommended for Linux and Windows guests respectively.
+    # These options are explained in Paravirtualization Providers.
+    vb.customize ['modifyvm', :id, '--paravirtprovider', 'hyperv']
+    # If hardware virtualization is enabled, this additional setting enables or disables
+    # the use of the nested paging feature in the processor of your host system.
+    vb.customize ['modifyvm', :id, '--nestedpaging', 'on']
+    # If hardware virtualization and nested paging are enabled, for Intel VT-x only,
+    # an additional performance improvement of up to 5% can be obtained by enabling this setting.
+    # This causes the hypervisor to use large pages to reduce TLB use and overhead.
+    vb.customize ['modifyvm', :id, '--largepages', 'on']
+    # If hardware virtualization is enabled, for Intel VT-x only, this additional setting enables or disables
+    # the use of the tagged TLB (VPID) feature in the processor of your host system.
+    vb.customize ['modifyvm', :id, '--vtxvpid', 'on']
+    # If hardware virtualization is enabled, for Intel VT-x only,
+    # this setting enables or disables the use of the unrestricted guest mode feature for executing your guest.
+    vb.customize ['modifyvm', :id, '--vtxux', 'on']
+  end
+end
